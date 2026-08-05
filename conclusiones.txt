@@ -1,0 +1,71 @@
+================================================================================
+CONCLUSIONS — DemoBlaze E2E Automation (Serenity BDD + Screenplay)
+================================================================================
+
+What was automated
+I automated the complete purchase flow on DemoBlaze:
+- Add two different products to the cart
+- Open the cart and verify the products
+- Fill the purchase form
+- Complete the purchase
+- Verify the success message and order ID
+- Close the confirmation modal
+
+Technical decisions
+I used the Screenplay Pattern instead of classic Page Objects because it is cleaner and more readable.  
+Serenity + Cucumber gives good reports and living documentation.  
+I avoided Thread.sleep and used proper waits.  
+WebDriverManager handles the ChromeDriver automatically.
+
+Challenges
+- The “Product added” alert had to be accepted
+- The cart sometimes loads slowly
+- The order ID is inside the confirmation text, so I had to extract it with a regex
+- Making the last step (close modal) stable was a bit tricky
+
+Possible improvements
+- Add more product combinations
+- Run tests in parallel
+- Add the tests to a CI pipeline
+- Support more browsers
+
+Final thoughts
+The project covers the full required flow in a clean and maintainable way.  
+It follows good automation practices and is easy to understand and extend.
+
+
+Versión en español
+------------------
+
+Qué se automatizó
+Se automatizó el flujo completo de compra en DemoBlaze:
+- Agregar dos productos diferentes al carrito
+- Abrir el carrito y verificar los productos
+- Llenar el formulario de compra
+- Completar la compra
+- Verificar el mensaje de éxito y el ID de la orden
+- Cerrar el modal de confirmación
+
+Decisiones técnicas
+Usé el patrón Screenplay en lugar de Page Objects clásicos porque es más limpio y legible.  
+Serenity + Cucumber genera buenos reportes y documentación viva.  
+Evité Thread.sleep y usé esperas correctas.  
+WebDriverManager se encarga del ChromeDriver automáticamente.
+
+Desafíos
+- Había que aceptar la alerta de “Product added”
+- El carrito a veces carga lento
+- El ID de la orden viene dentro del texto de confirmación, así que lo extraje con una expresión regular
+- Hacer estable el último paso (cerrar el modal) fue un poco complicado
+
+Posibles mejoras
+- Agregar más combinaciones de productos
+- Ejecutar las pruebas en paralelo
+- Integrar las pruebas en un pipeline de CI
+- Soportar más navegadores
+
+Conclusión final
+El proyecto cubre todo el flujo solicitado de forma limpia y mantenible.  
+Sigue buenas prácticas de automatización y es fácil de entender y extender.
+
+================================================================================

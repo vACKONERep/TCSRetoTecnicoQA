@@ -1,0 +1,61 @@
+================================================================================
+CONCLUSIONS — DemoBlaze API Automation (Karate)
+================================================================================
+
+What was tested
+I automated the Signup and Login APIs of DemoBlaze with four scenarios:
+- Create a new user successfully
+- Try to create a user that already exists
+- Login with correct credentials
+- Login with wrong credentials
+
+Technical decisions
+I chose Karate because it is simple and powerful for API testing. 
+I used version 1.5.1 so it works with Java 17. 
+Usernames are generated dynamically to avoid conflicts when running the tests multiple times.
+
+Challenges
+The API always returns status 200, even when there is an error. 
+Because of this, I had to validate the response body instead of the status code. 
+I also had to capture the exact error messages that DemoBlaze returns.
+
+Possible improvements
+- Add more endpoints (cart, products, etc.)
+- Run the tests in a CI pipeline
+- Add response time validations
+
+Final thoughts
+The project covers everything requested in a clean and maintainable way. 
+It is easy to run and easy to understand.
+
+
+Versión en español
+------------------
+
+Qué se probó
+Se automatizaron las APIs de Signup y Login de DemoBlaze con cuatro escenarios:
+- Crear un usuario nuevo correctamente
+- Intentar crear un usuario que ya existe
+- Login con credenciales correctas
+- Login con credenciales incorrectas
+
+Decisiones técnicas
+Elegí Karate porque es simple y muy bueno para pruebas de API. 
+Usé la versión 1.5.1 para que funcione con Java 17. 
+Los nombres de usuario se generan de forma dinámica para evitar conflictos al ejecutar las pruebas varias veces.
+
+Desafíos
+La API siempre responde con status 200, incluso cuando hay error. 
+Por eso tuve que validar el cuerpo de la respuesta en lugar del código de estado. 
+También tuve que capturar los mensajes de error exactos que devuelve DemoBlaze.
+
+Posibles mejoras
+- Agregar más endpoints (carrito, productos, etc.)
+- Ejecutar las pruebas en un pipeline de CI
+- Agregar validaciones de tiempo de respuesta
+
+Conclusión final
+El proyecto cubre todo lo solicitado de forma limpia y mantenible. 
+Es fácil de ejecutar y de entender.
+
+================================================================================
