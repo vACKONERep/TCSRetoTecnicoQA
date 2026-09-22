@@ -1,71 +1,108 @@
 ================================================================================
-CONCLUSIONS — DemoBlaze E2E Automation (Serenity BDD + Screenplay)
+CONCLUSIONES — Ejercicio 1, compra E2E en DemoBlaze
+Serenity BDD + Cucumber + Screenplay
 ================================================================================
 
-What was automated
-I automated the complete purchase flow on DemoBlaze:
-- Add two different products to the cart
-- Open the cart and verify the products
-- Fill the purchase form
-- Complete the purchase
-- Verify the success message and order ID
-- Close the confirmation modal
-
-Technical decisions
-I used the Screenplay Pattern instead of classic Page Objects because it is cleaner and more readable.  
-Serenity + Cucumber gives good reports and living documentation.  
-I avoided Thread.sleep and used proper waits.  
-WebDriverManager handles the ChromeDriver automatically.
-
-Challenges
-- The “Product added” alert had to be accepted
-- The cart sometimes loads slowly
-- The order ID is inside the confirmation text, so I had to extract it with a regex
-- Making the last step (close modal) stable was a bit tricky
-
-Possible improvements
-- Add more product combinations
-- Run tests in parallel
-- Add the tests to a CI pipeline
-- Support more browsers
-
-Final thoughts
-The project covers the full required flow in a clean and maintainable way.  
-It follows good automation practices and is easy to understand and extend.
-
-
-Versión en español
-------------------
-
-Qué se automatizó
-Se automatizó el flujo completo de compra en DemoBlaze:
-- Agregar dos productos diferentes al carrito
-- Abrir el carrito y verificar los productos
+Que automatice
+El flujo completo que pide el enunciado, en https://www.demoblaze.com/ :
+- Agregar dos productos al carrito
+- Abrir el carrito y comprobar que son esos dos
 - Llenar el formulario de compra
-- Completar la compra
-- Verificar el mensaje de éxito y el ID de la orden
-- Cerrar el modal de confirmación
+- Finalizar la compra
+- Verificar el mensaje de exito y que la confirmacion traiga un Id de orden
+- Cerrar el modal
 
-Decisiones técnicas
-Usé el patrón Screenplay en lugar de Page Objects clásicos porque es más limpio y legible.  
-Serenity + Cucumber genera buenos reportes y documentación viva.  
-Evité Thread.sleep y usé esperas correctas.  
-WebDriverManager se encarga del ChromeDriver automáticamente.
+No es un solo escenario con datos quemados. Es un Scenario Outline.
+La tabla Examples solo tiene el caseId. Los productos salen de
+src/test/resources/data/purchases.csv y el formulario de
+src/test/resources/data/buyers.json. Asi se cumple el pedido de variables
+y de outline con CSV o JSON, y un caso nuevo no obliga a copiar steps.
 
-Desafíos
-- Había que aceptar la alerta de “Product added”
-- El carrito a veces carga lento
-- El ID de la orden viene dentro del texto de confirmación, así que lo extraje con una expresión regular
-- Hacer estable el último paso (cerrar el modal) fue un poco complicado
+Casos de la corrida
+- PHONES-01: Samsung galaxy s6 + Nokia lumia 1520, comprador Juan Perez (Quito)
+- PHONES-02: Nexus 6 + Samsung galaxy s7, compradora Maria Lopez (Guayaquil)
 
-Posibles mejoras
-- Agregar más combinaciones de productos
-- Ejecutar las pruebas en paralelo
-- Integrar las pruebas en un pipeline de CI
-- Soportar más navegadores
+Decisiones
+- Serenity BDD con Screenplay, que es el marco que el criterio pide cuando
+  habla de tasks, user interface y model. Las tareas estan en tasks/,
+  los localizadores en ui/, los datos de la compra en models/.
+- Cucumber para el feature y, ademas del reporte Serenity, el reporte
+  HTML/JSON/XML de Cucumber. Los dos se generan con mvn verify.
+- Esperas explicitas de Serenity. No use Thread.sleep.
+- WebDriverManager resuelve el ChromeDriver. No hay que bajarlo a mano.
+- El navegador se cierra al terminar cada escenario, en el hook @After,
+  no a mitad del flujo.
 
-Conclusión final
-El proyecto cubre todo el flujo solicitado de forma limpia y mantenible.  
-Sigue buenas prácticas de automatización y es fácil de entender y extender.
+Resultado de la ejecucion (21 de septiembre de 2026)
+Comando: .\mvnw.cmd clean verify -Pheadless
+JDK 17.0.20, Chrome 153, ChromeDriver 153.0.8010.52
 
+  2 escenarios, 22 steps, 0 fallos.
+  Serenity: 2 passed, 0 failed.
+  Reportes:
+    target/site/serenity/index.html
+    target/cucumber-reports/index.html
+
+Lo que devolvio el sitio en esa corrida:
+  PHONES-01  Id 1707381  Amount 1180 USD  Name Juan Perez  tarjeta terminada en 1111
+  PHONES-02  Id 9829929  Amount 1450 USD  Name Maria Lopez tarjeta terminada en 0004
+
+1180 es 360 + 820 (precios de catalogo del S6 y del Lumia).
+1450 es 650 + 800 (Nexus 6 y Galaxy S7). El monto cuadra con los dos
+productos de cada caso, y el nombre y la tarjeta son los del JSON, no un
+valor fijo del step. Con eso se ve que el outline si esta leyendo los archivos.
+
+Que observe en la pagina
+1. Al agregar un producto, el sitio abre un alert JavaScript con el texto
+   "Product added". Si no se acepta, el siguiente clic no ocurre. Lo acepto
+   dentro de la tarea AddProductToCart.
+2. El carrito no esta listo en el mismo instante del clic. La tabla se llena
+   despues. Por eso la pregunta del carrito espera las filas, en vez de leer
+   el DOM de una vez.
+3. El Id de la orden no es un campo aparte. Viene dentro del texto del
+   SweetAlert ("Id: 1707381"). Lo extraigo con una expresion regular.
+4. El boton OK de esa confirmacion a veces recarga la pagina y la sesion de
+   Chrome queda invalida. El cierre del modal no vuelve a consultar el DOM
+   si la sesion ya murio: la compra ya quedo afirmada por el mensaje y el Id.
+5. Los productos del CSV estan en la primera pantalla (categoria Phones, que
+   es la que abre la home). Un producto de Laptops obligaria a cambiar de
+   categoria o a paginar. No lo hice porque el enunciado no lo pide, y meterlo
+   sin un caso en el CSV solo alargaria el test.
+6. La fecha impresa en la confirmacion fue "21/8/2026" en los dos pedidos,
+   y la corrida fue el 21 de septiembre de 2026. No lo marque como fallo
+   porque el enunciado no pide validar la fecha, pero es un defecto del demo:
+   el mes queda corrido, el patron tipico de usar getMonth() (que va de 0 a 11)
+   sin sumarle 1. El dia y el anio si coinciden.
+7. La confirmacion muestra la tarjeta completa. En un sitio real eso no deberia
+   pasar. Aqui use numeros de prueba (4111... y 5500...), no tarjetas reales.
+8. En el log aparece un aviso de Selenium: no encuentra el protocolo DevTools
+   para Chrome 153. El flujo no usa DevTools, los dos escenarios pasaron, y
+   el aviso no corta la prueba.
+9. Las capturas de Serenity estan en FOR_FAILURES para no inflar el reporte
+   cuando todo pasa. Si se quiere una foto por paso, en serenity.properties
+   se cambia serenity.take.screenshots a AFTER_EACH_STEP.
+
+Riesgos
+- DemoBlaze es un sitio publico y a veces responde lento. Los timeouts estan
+  en 10 y 15 segundos. Si el sitio se cae, el test falla por el sitio, no por
+  el script.
+- Solo deje Chrome. El enunciado no pide matriz de navegadores.
+- Los dos ejemplos hacen una compra real en el demo. No cobra, pero deja
+  ordenes en el sitio.
+
+Que mejoraria si el ejercicio diera mas tiempo
+- Afirmar tambien el monto del carrito, ya que en esta corrida cuadraba.
+- Un tercer caso con un producto de otra categoria, para forzar el cambio
+  de categoria.
+- Dejar las capturas por paso si el revisor va a leer el reporte sin
+  volver a correr la suite.
+
+Criterios del correo, en una linea
+1. Corren: mvn verify, 2/2.
+2. Informes Serenity y Cucumber generados.
+3. El feature usa <caseId>; los datos viven fuera del scenario.
+4. Scenario Outline + purchases.csv + buyers.json.
+5. tasks, ui, models, questions e interactions.
+6. readme.txt y README.md con los pasos.
+7. Este archivo.
 ================================================================================

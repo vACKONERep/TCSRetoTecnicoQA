@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>k6 login load test</title>
+  <style>
+    body { font-family: Segoe UI, sans-serif; margin: 2rem; color: #1a1a1a; }
+    table { border-collapse: collapse; min-width: 32rem; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.7rem; text-align: left; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+  <h1>Prueba de carga — login Fake Store API</h1>
+  <p>POST https://fakestoreapi.com/auth/login. Usuarios leidos de data/users.csv.</p>
+  <table>
+    <tr><th>TPS objetivo</th><td>20</td></tr>
+    <tr><th>TPS de llegada</th><td>20.00</td></tr>
+    <tr><th>TPS incluyendo el cierre</th><td>19.93</td></tr>
+    <tr><th>Peticiones</th><td>2400</td></tr>
+    <tr><th>Escenario (s)</th><td>120</td></tr>
+    <tr><th>Error (%)</th><td>0.00</td></tr>
+    <tr><th>p95 (ms)</th><td>554.2</td></tr>
+    <tr><th>max (ms)</th><td>1188.2</td></tr>
+    <tr><th>avg (ms)</th><td>422.7</td></tr>
+    <tr><th>Alcanzo 20 TPS</th><td>SI</td></tr>
+    <tr><th>p95 dentro de 1,5 s</th><td>SI</td></tr>
+    <tr><th>Maximo dentro de 1,5 s</th><td>SI</td></tr>
+    <tr><th>Error menor al 3%</th><td>SI</td></tr>
+  </table>
+</body>
+</html>

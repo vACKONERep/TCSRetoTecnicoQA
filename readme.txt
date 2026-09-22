@@ -1,74 +1,183 @@
 ================================================================================
-DemoBlaze E2E Automation — Serenity BDD + Screenplay
+RETO TECNICO — QA AUTOMATIZADOR — TCS ECUADOR
+DemoBlaze: E2E con Serenity BDD + Cucumber, y APIs con Karate
 ================================================================================
 
-Project
-Automation of the complete purchase flow on https://www.demoblaze.com/
-using Serenity BDD + Screenplay Pattern.
+El repositorio resuelve los ejercicios del examen practico.
 
-Prerequisites
-- Java 17 or higher
-- Maven (or use the included Maven Wrapper)
-- Google Chrome installed
+  E2E (raiz)                         Flujo de compra en https://www.demoblaze.com/
+  APIs (carpeta karate-api)          Signup y Login en https://api.demoblaze.com
+  Performance (EjercicioPerformance) Carga del login con k6
 
-How to run the tests
+Archivos pedidos por el enunciado:
+  readme.txt          este archivo (pasos de ejecucion del E2E y el indice)
+  conclusiones.txt    hallazgos del ejercicio E2E
+  karate-api/readme.txt
+  karate-api/conclusiones.txt
+  EjercicioPerformance/readme.txt
+  EjercicioPerformance/conclusiones.txt
 
-Open PowerShell in the project folder and run:
+--------------------------------------------------------------------------------
+1. REQUISITOS
+--------------------------------------------------------------------------------
 
-.\mvnw.cmd clean verify
+  - JDK 17 o superior. Comprobar con:  java -version
+  - Google Chrome instalado (solo el E2E; el driver lo baja WebDriverManager)
+  - Internet, porque la pagina y la API son publicas
+  - No hace falta instalar Maven. Usar el Maven Wrapper de la raiz:
+      Windows:     mvnw.cmd
+      macOS/Linux: ./mvnw
 
-To run in headless mode:
+--------------------------------------------------------------------------------
+2. EJERCICIO 1 — EJECUTAR EL E2E
+--------------------------------------------------------------------------------
 
-.\mvnw.cmd clean verify -Pheadless
+Abrir una terminal en la raiz de este repositorio.
 
-What the test does
-1. Opens the DemoBlaze page
-2. Adds two products to the cart
-3. Opens the cart and verifies the products
-4. Fills the purchase form
-5. Completes the purchase
-6. Verifies the success message and order ID
-7. Closes the confirmation modal
+  Con ventana de Chrome (Windows):
+      .\mvnw.cmd clean verify
 
-Notes
-- The project uses Screenplay Pattern
-- No Thread.sleep is used
-- WebDriverManager downloads the correct ChromeDriver automatically
+  Sin ventana, para CI o una maquina sin escritorio:
+      .\mvnw.cmd clean verify -Pheadless
 
+  macOS / Linux:
+      ./mvnw clean verify
+      ./mvnw clean verify -Pheadless
 
-Versión en español
-------------------
+Que hace cada ejemplo del Scenario Outline
 
-Proyecto
-Automatización del flujo completo de compra en https://www.demoblaze.com/
-usando Serenity BDD + patrón Screenplay.
+  1. Abre https://www.demoblaze.com/
+  2. Agrega los dos productos del caso (archivo purchases.csv)
+  3. Abre el carrito y comprueba que esos dos productos estan
+  4. Completa el formulario con el comprador del caso (archivo buyers.json)
+  5. Finaliza la compra
+  6. Verifica "Thank you for your purchase!" y que la confirmacion traiga un Id
+  7. Cierra el modal de confirmacion
 
-Requisitos
-- Java 17 o superior
-- Maven (o usar el Maven Wrapper incluido)
-- Google Chrome instalado
+Casos que corren hoy
 
-Cómo ejecutar las pruebas
+  PHONES-01   Samsung galaxy s6 + Nokia lumia 1520   comprador buyer-01 (Quito)
+  PHONES-02   Nexus 6 + Samsung galaxy s7            comprador buyer-02 (Guayaquil)
 
-Abre PowerShell en la carpeta del proyecto y ejecuta:
+De donde salen los datos (no estan quemados en el feature)
 
-.\mvnw.cmd clean verify
+  src/test/resources/data/purchases.csv   productos, por caseId
+  src/test/resources/data/buyers.json     formulario, por buyerId
+  src/test/resources/features/purchase_flow.feature
+      Scenario Outline. La tabla Examples solo elige el caseId (<caseId>).
 
-Para ejecutar en modo headless:
+Para agregar otra combinacion: nueva fila en el CSV, el buyer en el JSON
+si aun no existe, y el caseId en Examples. Los steps no se tocan.
 
-.\mvnw.cmd clean verify -Pheadless
+--------------------------------------------------------------------------------
+3. REPORTES DEL E2E
+--------------------------------------------------------------------------------
 
-Qué hace la prueba
-1. Abre la página de DemoBlaze
-2. Agrega dos productos al carrito
-3. Abre el carrito y verifica los productos
-4. Llena el formulario de compra
-5. Completa la compra
-6. Verifica el mensaje de éxito y el ID de la orden
-7. Cierra el modal de confirmación
+Se generan al terminar "mvn verify".
 
-Notas
-- El proyecto usa el patrón Screenplay
-- No se utiliza Thread.sleep
-- WebDriverManager descarga automáticamente el ChromeDriver correcto
+  Serenity (living documentation, pasos Screenplay):
+      target/site/serenity/index.html
+
+  Cucumber (resumen HTML, JSON y JUnit):
+      target/cucumber-reports/index.html
+      target/cucumber-reports/cucumber.json
+      target/cucumber-reports/cucumber.xml
+
+  Timeline de Cucumber:
+      target/cucumber-timeline/index.html
+
+  Windows:
+      Invoke-Item target\site\serenity\index.html
+      Invoke-Item target\cucumber-reports\index.html
+
+--------------------------------------------------------------------------------
+4. EJERCICIO 2 — EJECUTAR LAS APIS
+--------------------------------------------------------------------------------
+
+Desde la raiz del repositorio (Windows):
+
+      .\mvnw.cmd -f karate-api\pom.xml clean test
+
+Solo signup, solo login, o el tag smoke:
+
+      .\mvnw.cmd -f karate-api\pom.xml test -Psignup
+      .\mvnw.cmd -f karate-api\pom.xml test -Plogin
+      .\mvnw.cmd -f karate-api\pom.xml test -Psmoke
+
+El detalle de carpetas, casos y el contrato real de la API esta en
+karate-api/readme.txt.
+
+--------------------------------------------------------------------------------
+5. REPORTE DE LAS APIS
+--------------------------------------------------------------------------------
+
+      karate-api/target/karate-reports/karate-summary.html
+
+Abrir un escenario muestra la entrada (request JSON) y la salida (response).
+Karate tambien deja el JSON de Cucumber junto a ese HTML.
+
+  Windows, desde la raiz:
+      Invoke-Item karate-api\target\karate-reports\karate-summary.html
+
+--------------------------------------------------------------------------------
+5b. PERFORMANCE — PRUEBA DE CARGA
+--------------------------------------------------------------------------------
+
+La prueba de k6 vive en EjercicioPerformance/. Ahi estan su readme.txt
+(con la version de k6) y su conclusiones.txt. Resumen:
+
+  cd EjercicioPerformance
+  k6 run scripts\login-load.js
+
+Reporte: EjercicioPerformance/reports/summary.html
+
+--------------------------------------------------------------------------------
+6. ESTRUCTURA
+--------------------------------------------------------------------------------
+
+  pom.xml                         build del E2E (Serenity + Cucumber + Failsafe)
+  src/test/java/.../tasks         tareas Screenplay (agregar, carrito, compra)
+  src/test/java/.../ui            user interface (Home, Product, Cart, Order)
+  src/test/java/.../models        PurchaseData y PurchaseCase
+  src/test/java/.../questions     lecturas del carrito y de la confirmacion
+  src/test/java/.../data          catalogo que lee el CSV y el JSON
+  src/test/resources/features     purchase_flow.feature (Scenario Outline)
+  src/test/resources/data         purchases.csv y buyers.json
+  karate-api/                     proyecto Maven independiente de las APIs
+  EjercicioPerformance/           prueba de carga k6 (login, 20 TPS, CSV)
+  readme.txt / conclusiones.txt   entregables del E2E
+  README.md                       misma guia, en formato de GitHub
+
+--------------------------------------------------------------------------------
+7. CRITERIOS DEL CORREO Y DONDE QUEDAN CUBIERTOS
+--------------------------------------------------------------------------------
+
+E2E
+  1. Los tests corren con: .\mvnw.cmd clean verify
+  2. Informes Serenity y Cucumber: seccion 3 de este archivo
+  3. Feature con variable <caseId>; url, actor y mensaje en TestData
+  4. Scenario Outline alimentado por purchases.csv y buyers.json
+  5. tasks, ui, models, questions e interactions
+  6. Este readme.txt
+  7. conclusiones.txt
+
+APIs
+  1. POST /signup y POST /login, alta nueva, usuario repetido,
+     login correcto y login incorrecto
+  2. Informe karate-reports: seccion 5
+  3. baseUrl, defaultPassword y messages en karate-config.js
+  4. Scenario Outline: signup-cases.csv y login-cases.json
+
+--------------------------------------------------------------------------------
+8. SI ALGO FALLA
+--------------------------------------------------------------------------------
+
+  - "java no se reconoce": instalar JDK 17 y abrir una terminal nueva.
+  - Chrome no abre: instalar Google Chrome, o usar -Pheadless.
+  - El E2E falla al buscar un producto: el nombre en purchases.csv tiene que
+    ser exacto al de la tienda (mayusculas incluidas), y el producto tiene
+    que estar en la primera pagina (categoria Phones).
+  - La API responde 200 con errorMessage: es el comportamiento del sitio,
+    no un fallo del test. Ver conclusiones.
+  - Limpiar salidas viejas: borrar las carpetas target y volver a correr.
 ================================================================================

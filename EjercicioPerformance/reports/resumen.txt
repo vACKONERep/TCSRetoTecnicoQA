@@ -1,0 +1,27 @@
+================================================================================
+PRUEBA DE CARGA — POST /auth/login — k6
+================================================================================
+URL:                 https://fakestoreapi.com/auth/login
+Usuarios CSV:        5 (data/users.csv)
+Objetivo:            20 TPS durante 120 s
+Peticiones:          2400
+TPS de llegada:      20.00
+TPS con el cierre:   19.93 (incluye graceful stop, 120.4 s)
+Iteraciones perdidas: 0
+
+Tiempo de respuesta (ms)
+  avg 422.7   min 300.7   med 464.4
+  p90 523.8   p95 554.2   p99 668.3   max 1188.2
+
+Tasa de error:       0.00 %
+Checks
+  status is 201: 2400 ok, 0 fallo
+  token is present: 2400 ok, 0 fallo
+  response time <= 1.5s: 2400 ok, 0 fallo
+
+Criterios
+  Alcanzo 20 TPS:              SI
+  p95 menor a 1,5 s:           SI
+  maximo menor a 1,5 s:        SI
+  Error menor al 3 %:          SI
+================================================================================

@@ -33,7 +33,7 @@
     <div>Features</div>
   </div>
   <div id="nav-date">
-    <div>2026-08-05 09:09:23 AM</div>
+    <div>2026-09-21 06:40:45 PM</div>
   </div>
 </div>
 
@@ -61,11 +61,15 @@
               </td>
               <td title="As a registered customer
   I want to authenticate through the Login REST API
-  So that I receive an auth token to use the application">DemoBlaze Login API</td>
+  So that I receive an auth token
+
+  Examples are read from data/login-cases.json.
+  expectedKey points at messages.* in karate-config.js.
+  A fresh user is created first, except for the unknown-user case.">DemoBlaze Login API</td>
               <td class="num">3</td>
               <td class="num">0</td>
               <td class="num">3</td>
-              <td class="num">2793</td>
+              <td class="num">2529</td>
             </tr>
             <tr class="passed">
               <td>
@@ -73,11 +77,15 @@
               </td>
               <td title="As a new customer
   I want to register through the Signup REST API
-  So that I can create an account to use DemoBlaze">DemoBlaze Signup API</td>
+  So that I can create an account on DemoBlaze
+
+  Each row of data/signup-cases.csv is one Scenario Outline example.
+  expectedKey points at messages.* in karate-config.js.
+  The username is generated per example so a rerun does not collide with a previous user.">DemoBlaze Signup API</td>
               <td class="num">2</td>
               <td class="num">0</td>
               <td class="num">2</td>
-              <td class="num">1187</td>
+              <td class="num">1125</td>
             </tr>
           </tbody>
         </table>

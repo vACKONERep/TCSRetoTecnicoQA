@@ -1,22 +1,28 @@
-@purchase @e2e 
+@purchase @e2e
 Feature: End-to-end product purchase on DemoBlaze
   As a DemoBlaze customer
-  I want to add products to the cart and complete a purchase
-  So that I can buy products successfully online
+  I want to add two products to the cart and complete checkout
+  So that I receive an order confirmation
+
+  Product pairs come from data/purchases.csv.
+  The Place Order form comes from data/buyers.json, linked by buyerId.
+  The Examples table only chooses which case id to run.
 
   Background:
     Given the customer opens the DemoBlaze home page
 
-  Scenario: Successful purchase of two different products
-    When the customer adds "Samsung galaxy s6" to the cart
-    And the customer adds "Nokia lumia 1520" to the cart
+  @outline
+  Scenario Outline: Successful purchase for case <caseId>
+    When the customer adds the two products defined for case "<caseId>"
     And the customer opens the cart
-    Then the cart should contain the products:
-      | product            |
-      | Samsung galaxy s6  |
-      | Nokia lumia 1520   |
-    When the customer places the order with valid purchase data
+    Then the cart should contain the two products defined for case "<caseId>"
+    When the customer places the order with the buyer data for case "<caseId>"
     Then the purchase should be confirmed successfully
     And the order confirmation should display an order id
     When the customer closes the purchase confirmation
     Then the confirmation modal should no longer be visible
+
+    Examples:
+      | caseId    |
+      | PHONES-01 |
+      | PHONES-02 |

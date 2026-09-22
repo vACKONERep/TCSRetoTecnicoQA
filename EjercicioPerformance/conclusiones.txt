@@ -1,0 +1,95 @@
+================================================================================
+CONCLUSIONES — Prueba de carga del login (k6)
+POST https://fakestoreapi.com/auth/login
+================================================================================
+
+Que hice
+Una prueba de carga con Grafana k6 2.3.0. El escenario
+sostiene 20 TPS durante 2 minutos con constant-arrival-rate: k6 arranca
+20 logins por segundo, sin sleep. Cada llamada es un POST con
+Content-Type application/json. El usuario y el password salen de
+data/users.csv (columnas user y passwd, las cinco filas del enunciado)
+y se rotan en orden. En el JSON se envian como username y password,
+que es lo que el servicio lee.
+
+Corrida del 21 de septiembre de 2026
+k6 2.3.0, Windows, desde la carpeta EjercicioPerformance.
+Comando: k6 run scripts\login-load.js
+k6 termino con codigo 99 porque el umbral de duracion maxima no se cumplio.
+El reporte si se genero.
+
+  Peticiones:                         2398
+  TPS de llegada (2398 / 120 s):      19.98
+  Iteraciones que k6 no pudo lanzar:  0
+  La consola mantuvo 20.00 iters/s los 2 minutos
+  TPS si se mete el cierre de 15 s:   17.76  (no es la tasa del escenario)
+  Error HTTP:                         0.17 %   (4 de 2398)
+  avg 640 ms   mediana 341 ms   p90 1133 ms   p95 1224 ms
+  p99 4522 ms   maximo 60000 ms (el tope de 60 s del cliente)
+
+Checks
+  status 201:              2394 ok, 4 fallo
+  token presente:          2394 ok, 4 fallo
+  tiempo de esa llamada <= 1,5 s:  2322 ok, 76 fallo
+
+Criterios del enunciado
+  Alcanzo 20 TPS:            si. No se perdio ninguna llegada por falta de
+                             usuarios virtuales. 19.98 y no 20.00 exactos
+                             porque 2 llamadas seguian abiertas al cierre
+                             y no entraron en las 2398 completadas.
+  Error menor al 3 %:        si. 0.17 % esta muy por debajo.
+  Tiempo maximo 1,5 s:       no, si se lee al pie de la letra.
+                             El p95 si cabe (1224 ms < 1500).
+                             76 llamadas, el 3.2 %, pasaron de 1,5 s.
+                             El p99 fue 4,5 s. El maximo es 60 s: son las
+                             que agotaron el timeout, no una respuesta tardia
+                             medida hasta el final.
+
+Por eso el umbral http_req_duration queda en rojo (exige p95 y maximo
+bajo 1,5 s) y login_duration, que solo mira el p95, queda en verde.
+http_req_failed tambien queda en verde.
+
+Que observe del servicio
+1. Con las cinco credenciales del CSV el login responde 201 y un JSON
+   {"token": "..."}. No responde 200. Un 201 no es un error: k6 marca
+   error cuando el status es 0 o 400 o mas. El check pide 201 para no
+   dar por bueno un cuerpo vacio.
+2. El token parece un JWT. No lo guardo ni lo reutilizo: el enunciado
+   solo pide el login.
+3. A 20 TPS el servicio aguanta el caudal. Hicieron falta unos 11 a 20
+   usuarios virtuales, de 40 reservados. No fue un problema de clientes
+   locales. La mediana en 341 ms y el promedio en 641 ms dicen que la
+   mayoria es rapida y unas pocas alargan el promedio.
+4. En el log aparecieron dos "request timeout" a los 60 s, y al cierre
+   quedaron 2 iteraciones interrumpidas. Esas cuatro son las que no
+   trajeron token. El resto de las 76 lentas si respondieron 201, solo
+   que tarde.
+5. Es una API publica y compartida. Esta corrida no dice cual seria el
+   techo en un ambiente dedicado. Otra hora del dia puede mover la cola.
+6. El minimo de 0 ms no es un login instantaneo. k6 lo anota en una
+   peticion que falla antes de tener un tiempo util.
+
+Como lo dejaria si el criterio de 1,5 s fuera un acuerdo de servicio
+- El p95 de 1,2 s entra. El acuerdo, escrito como percentil, se cumpliria.
+- Escrito como maximo absoluto, hoy no se cumple: haria falta recortar
+  la cola (timeout mas corto del lado del servidor, o mas capacidad) o
+  aceptar que un 3 % de las llamadas se sale.
+- No baje el umbral max<1500 para pintar el build de verde. El codigo 99
+  es el resultado de la prueba, no un error del script.
+
+Que no hice, a proposito
+- No mezcle esta prueba con el E2E de DemoBlaze ni con Karate. El enunciado
+  de performance es otro servicio.
+- No deje los passwords en el script. Si se agrega una fila al CSV, entra
+  en la rotacion sin tocar el escenario.
+- No subi la duracion de 10 minutos. Dos minutos a 20 TPS ya son casi
+  2400 logins sobre un demo publico. Alcanza para ver la tasa y la cola.
+
+Archivos para el revisor
+  readme.txt                 pasos y version de k6
+  data/users.csv             los cinco usuarios
+  scripts/login-load.js      escenario, checks y umbrales
+  reports/resumen.txt        numeros de esta corrida
+  reports/summary.json       los mismos numeros
+  reports/summary.html       la misma tabla
+================================================================================

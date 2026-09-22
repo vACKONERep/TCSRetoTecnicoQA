@@ -1,6 +1,8 @@
 package com.demoblaze.automation.steps;
 
+import com.demoblaze.automation.data.PurchaseCatalog;
 import com.demoblaze.automation.data.TestData;
+import com.demoblaze.automation.models.PurchaseCase;
 import com.demoblaze.automation.questions.CartContents;
 import com.demoblaze.automation.questions.PurchaseConfirmation;
 import com.demoblaze.automation.tasks.AddProductToCart;
@@ -12,12 +14,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import net.serenitybdd.screenplay.ensure.Ensure;
-import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Map;
 
 import static net.serenitybdd.screenplay.GivenWhenThen.seeThat;
 import static net.serenitybdd.screenplay.actors.OnStage.theActorCalled;
@@ -30,7 +28,8 @@ import static org.hamcrest.Matchers.not;
 
 /**
  * Cucumber step definitions for the DemoBlaze purchase flow.
- * Steps stay thin: they orchestrate Screenplay Tasks/Questions only.
+ * Steps stay thin: they resolve the case id against the CSV/JSON catalog
+ * and then orchestrate Screenplay Tasks and Questions.
  * Browser lifecycle is handled in {@link Hooks}.
  */
 public class PurchaseFlowStepDefinitions {
@@ -44,10 +43,14 @@ public class PurchaseFlowStepDefinitions {
         );
     }
 
-    @When("the customer adds {string} to the cart")
-    public void theCustomerAddsProductToTheCart(String productName) {
+    @When("the customer adds the two products defined for case {string}")
+    public void theCustomerAddsTheTwoProductsDefinedForCase(String caseId) {
+        PurchaseCase purchaseCase = PurchaseCatalog.find(caseId);
+        LOGGER.info("Case {} — adding products from CSV: {}", caseId, purchaseCase);
+
         theActorInTheSpotlight().attemptsTo(
-                AddProductToCart.named(productName)
+                AddProductToCart.named(purchaseCase.getFirstProduct()),
+                AddProductToCart.named(purchaseCase.getSecondProduct())
         );
     }
 
@@ -58,35 +61,32 @@ public class PurchaseFlowStepDefinitions {
         );
     }
 
-    @Then("the cart should contain the products:")
-    public void theCartShouldContainTheProducts(List<Map<String, String>> productTable) {
-        List<String> expectedProducts = productTable.stream()
-                .map(row -> row.get("product"))
-                .toList();
-
-        LOGGER.info("Verifying cart contains: {}", expectedProducts);
-
-        // Soft assertions: report every missing product in a single failure
-        SoftAssertions softly = new SoftAssertions();
-        List<String> actualProducts = theActorInTheSpotlight()
-                .asksFor(CartContents.displayed());
-
-        for (String expected : expectedProducts) {
-            softly.assertThat(actualProducts)
-                    .as("Cart should contain product '%s'", expected)
-                    .contains(expected);
-        }
-        softly.assertAll();
+    @Then("the cart should contain the two products defined for case {string}")
+    public void theCartShouldContainTheTwoProductsDefinedForCase(String caseId) {
+        PurchaseCase purchaseCase = PurchaseCatalog.find(caseId);
+        LOGGER.info(
+                "Verifying cart for {} contains '{}' and '{}'",
+                caseId,
+                purchaseCase.getFirstProduct(),
+                purchaseCase.getSecondProduct()
+        );
 
         theActorInTheSpotlight().should(
-                seeThat("cart product list", CartContents.displayed(), hasItems(expectedProducts.toArray(String[]::new)))
+                seeThat(
+                        "cart product list",
+                        CartContents.displayed(),
+                        hasItems(purchaseCase.getFirstProduct(), purchaseCase.getSecondProduct())
+                )
         );
     }
 
-    @When("the customer places the order with valid purchase data")
-    public void theCustomerPlacesTheOrderWithValidPurchaseData() {
+    @When("the customer places the order with the buyer data for case {string}")
+    public void theCustomerPlacesTheOrderWithTheBuyerDataForCase(String caseId) {
+        PurchaseCase purchaseCase = PurchaseCatalog.find(caseId);
+        LOGGER.info("Placing order for {} with buyer data from JSON: {}", caseId, purchaseCase.getBuyer());
+
         theActorInTheSpotlight().attemptsTo(
-                CompletePurchase.with(TestData.DEFAULT_PURCHASE)
+                CompletePurchase.with(purchaseCase.getBuyer())
         );
     }
 

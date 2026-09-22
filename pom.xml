@@ -25,6 +25,7 @@
         <maven.surefire.plugin.version>3.5.2</maven.surefire.plugin.version>
         <maven.failsafe.plugin.version>3.5.2</maven.failsafe.plugin.version>
         <tags></tags>
+        <headless.mode>false</headless.mode>
     </properties>
 
     <dependencyManagement>
@@ -149,6 +150,7 @@
                     </includes>
                     <systemPropertyVariables>
                         <cucumber.filter.tags>${tags}</cucumber.filter.tags>
+                        <headless.mode>${headless.mode}</headless.mode>
                     </systemPropertyVariables>
                 </configuration>
                 <executions>
@@ -194,21 +196,8 @@
         <profile>
             <id>headless</id>
             <properties>
-                <serenity.headless.mode>true</serenity.headless.mode>
+                <headless.mode>true</headless.mode>
             </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <headless.mode>true</headless.mode>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 </project>

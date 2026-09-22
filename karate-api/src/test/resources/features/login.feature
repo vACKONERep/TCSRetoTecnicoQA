@@ -2,60 +2,35 @@
 Feature: DemoBlaze Login API
   As a registered customer
   I want to authenticate through the Login REST API
-  So that I receive an auth token to use the application
+  So that I receive an auth token
+
+  Examples are read from data/login-cases.json.
+  expectedKey points at messages.* in karate-config.js.
+  A fresh user is created first, except for the unknown-user case.
 
   Background:
     * url baseUrl
     * header Content-Type = 'application/json'
     * header Accept = 'application/json'
-    * def timestamp = java.lang.System.currentTimeMillis()
-    * def random = Math.floor(Math.random() * 100000)
-    * def newUsername = 'login_user_' + timestamp + '_' + random
     * def password = defaultPassword
 
-  @smoke @positive
-  Scenario: Login with correct username and password
-    # Arrange: ensure a fresh user exists before login
-    Given path 'signup'
-    And request { username: '#(newUsername)', password: '#(password)' }
+  @smoke
+  Scenario Outline: <caseId> - <description>
+    * def stamp = java.lang.System.currentTimeMillis() + '_' + java.util.concurrent.ThreadLocalRandom.current().nextInt(100000)
+    * def username = (flow == 'unknown_user') ? ('missing_' + stamp) : ('login_' + stamp)
+    * def passwordUsed = (flow == 'wrong_password') ? 'WrongPass999!' : password
+    * def expected = expectedKey == 'NONE' ? null : messages[expectedKey]
+    * def prepared = (flow == 'unknown_user') ? null : karate.call('classpath:helpers/create-user.feature', { username: username, password: password })
+    Given url baseUrl
+    And path 'login'
+    And header Content-Type = 'application/json'
+    And request { username: '#(username)', password: '#(passwordUsed)' }
     When method post
     Then status 200
+    * if (flow == 'valid') karate.match(response, '#regex (?s).*Auth_token:\\s*\\S+.*')
+    * if (flow != 'valid') karate.match(response.errorMessage, expected)
+    * print 'INPUT username=', username, 'flow=', flow
+    * print 'OUTPUT', response
 
-    # Act: login with the same credentials
-    Given path 'login'
-    And request { username: '#(newUsername)', password: '#(password)' }
-    When method post
-    Then status 200
-    # DemoBlaze returns a string token, e.g. "Auth_token: <base64>"
-    And match response == '#string'
-    And match response contains 'Auth_token'
-    And match response == '#regex (?s).*Auth_token:\\s*\\S+.*'
-    * print 'Login successful for:', newUsername
-    * print 'Token response:', response
-
-  @negative
-  Scenario: Login with incorrect password
-    # Arrange: create a valid user first
-    Given path 'signup'
-    And request { username: '#(newUsername)', password: '#(password)' }
-    When method post
-    Then status 200
-
-    # Act: same username, wrong password
-    Given path 'login'
-    And request { username: '#(newUsername)', password: 'WrongPass999!' }
-    When method post
-    Then status 200
-    And match response == { errorMessage: '#(messages.wrongPassword)' }
-    And match response.errorMessage == 'Wrong password.'
-    * print 'Login correctly rejected for wrong password. User:', newUsername
-
-  @negative
-  Scenario: Login with incorrect username
-    Given path 'login'
-    And request { username: 'user_does_not_exist_x_999', password: 'whatever' }
-    When method post
-    Then status 200
-    And match response == { errorMessage: '#(messages.userDoesNotExist)' }
-    And match response.errorMessage contains 'does not exist'
-    * print 'Login correctly rejected for unknown user'
+    Examples:
+      | read('classpath:data/login-cases.json') |

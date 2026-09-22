@@ -1,116 +1,134 @@
 ================================================================================
- DemoBlaze API Automation — Karate Framework
+EJERCICIO 2 — APIs DemoBlaze — Karate
 ================================================================================
 
-Project : demoblaze-karate-api
-Base URL: https://api.demoblaze.com
-APIs    : POST /signup , POST /login
+Proyecto : demoblaze-karate-api
+Base URL : https://api.demoblaze.com
+Recursos : POST /signup    POST /login
+
+El enunciado pide probar:
+  1. Crear un usuario nuevo en signup
+  2. Intentar crear un usuario que ya existe
+  3. Login con usuario y password correctos
+  4. Login con usuario y password incorrectos
+
+Esos cuatro casos (mas un login con usuario inexistente) son Scenario Outline.
+No hay un escenario copiado por cada caso.
 
 --------------------------------------------------------------------------------
-1. PROJECT STRUCTURE
+1. ESTRUCTURA
 --------------------------------------------------------------------------------
 
   karate-api/
   ├── pom.xml
   ├── readme.txt
   ├── conclusiones.txt
-  ├── .gitignore
   └── src/test/
       ├── java/com/demoblaze/api/runners/
-      │     ├── DemoBlazeApiTest.java   ← main suite runner (JUnit 5)
-      │     ├── SignupRunner.java      ← IDE-friendly signup only
-      │     └── LoginRunner.java       ← IDE-friendly login only
+      │     ├── DemoBlazeApiTest.java    suite completa (la que corre Maven)
+      │     ├── SignupRunner.java        solo signup, para depurar en el IDE
+      │     └── LoginRunner.java         solo login, para depurar en el IDE
       └── resources/
-            ├── karate-config.js
+            ├── karate-config.js         baseUrl, password y messages
+            ├── data/
+            │     ├── signup-cases.csv   outline de signup
+            │     └── login-cases.json   outline de login
+            ├── helpers/
+            │     └── create-user.feature   alta previa; no es un test suelto
             └── features/
                   ├── signup.feature
                   └── login.feature
 
 --------------------------------------------------------------------------------
-2. PREREQUISITES
+2. REQUISITOS
 --------------------------------------------------------------------------------
 
-  - JDK 17 or higher (project targets Java 17)
-  - Apache Maven 3.9+  (or use parent project Maven Wrapper from repo root)
-  - Internet access to reach https://api.demoblaze.com
-
-  Verify:
-
-    java -version
-    mvn -version
+  - JDK 17 o superior (java -version)
+  - Internet hasta https://api.demoblaze.com
+  - Maven Wrapper del repositorio padre (no hace falta instalar Maven)
 
 --------------------------------------------------------------------------------
-3. HOW TO RUN THE TESTS
+3. COMO EJECUTAR
 --------------------------------------------------------------------------------
 
-  From this folder (karate-api):
+Desde la raiz del repositorio, en PowerShell:
 
-    mvn clean test
+    .\mvnw.cmd -f karate-api\pom.xml clean test
 
-  From the parent repository root (if Maven Wrapper is available there):
+Desde esta carpeta (karate-api):
 
-    cd karate-api
     ..\mvnw.cmd clean test
+    ..\mvnw.cmd test -Psignup     solo el tag @signup
+    ..\mvnw.cmd test -Plogin      solo el tag @login
+    ..\mvnw.cmd test -Psmoke      solo el tag @smoke (los dos outlines)
 
-  PowerShell — set JAVA_HOME if needed:
+macOS / Linux, desde la raiz:
 
-    $env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.20.8-hotspot"
-    $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
-    mvn clean test
-
-  Run by tags / profiles:
-
-    mvn test -Psmoke          # @smoke scenarios only
-    mvn test -Psignup         # @signup only
-    mvn test -Plogin          # @login only
-
-  Or via Karate options:
-
-    mvn test "-Dkarate.options=--tags @negative"
-    mvn test "-Dkarate.options=--tags @positive"
+    ./mvnw -f karate-api/pom.xml clean test
 
 --------------------------------------------------------------------------------
-4. SCENARIOS COVERED
+4. CASOS Y DE DONDE SALE CADA DATO
 --------------------------------------------------------------------------------
 
-  1) Signup  — successfully create a new user              (@smoke @positive)
-  2) Signup  — user already exists                         (@negative)
-  3) Login   — correct username and password               (@smoke @positive)
-  4) Login   — incorrect password                          (@negative)
-  5) Login   — incorrect / unknown username (bonus)        (@negative)
+Signup — src/test/resources/data/signup-cases.csv
 
-  Usernames are generated dynamically (timestamp + random) so re-runs never
-  collide with previously registered accounts.
+  SU-01  flow=create      usuario nuevo, sin errorMessage
+  SU-02  flow=duplicate   se crea y se vuelve a registrar; error de negocio
+
+Login — src/test/resources/data/login-cases.json
+
+  LG-01  flow=valid            password correcto, respuesta con Auth_token
+  LG-02  flow=wrong_password   mismo usuario, password distinto
+  LG-03  flow=unknown_user     usuario que no se registro
+
+Variables (karate-config.js), usadas por todas las features:
+
+  baseUrl            https://api.demoblaze.com
+  defaultPassword    password de los usuarios generados
+  messages           textos exactos que devuelve la API
+
+  userAlreadyExists  "This user already exist."
+  wrongPassword      "Wrong password."
+  userDoesNotExist   "User does not exist."
+
+La columna expectedKey del CSV/JSON no repite el texto: apunta a messages.
+El username se arma en el escenario con timestamp + random, asi una segunda
+corrida no choca con la primera. La API no tiene forma de borrar usuarios.
 
 --------------------------------------------------------------------------------
-5. HOW TO VIEW THE REPORTS
+5. REPORTES
 --------------------------------------------------------------------------------
 
-  After a run, open the Karate HTML report:
+Despues de mvn test, abrir:
 
     target/karate-reports/karate-summary.html
 
-  PowerShell:
+PowerShell, desde esta carpeta:
 
     Invoke-Item target\karate-reports\karate-summary.html
 
-  Additional outputs:
+En cada escenario el HTML muestra el request (entrada) y el response (salida),
+el status y el resultado del match. Tambien queda:
 
-    target/karate-reports/          ← Karate HTML (timeline, request/response)
-    target/surefire-reports/        ← JUnit / Surefire XML + text
-    target/karate-reports/*.json    ← Cucumber JSON (if enabled)
+    target/karate-reports/*.json     JSON de cada feature
+    target/surefire-reports/         resultado JUnit
 
 --------------------------------------------------------------------------------
-6. NOTES ABOUT THE API UNDER TEST
+6. CONTRATO REAL DE LA API (IMPORTANTE PARA LEER LOS TESTS)
 --------------------------------------------------------------------------------
 
-  DemoBlaze returns HTTP 200 for both success and business failures.
-  Assertions therefore validate the response BODY:
+Los dos recursos se consumen con POST y Content-Type application/json.
 
-    - Successful signup  → empty body
-    - Duplicate signup   → { "errorMessage": "This user already exist." }
-    - Successful login   → string containing "Auth_token: ..."
-    - Wrong password     → { "errorMessage": "Wrong password." }
-    - Unknown user       → { "errorMessage": "User does not exist." }
+Signup y Login responden HTTP 200 tambien cuando el negocio falla.
+Por eso el test afirma el status 200 y, ademas, el cuerpo:
 
+  Signup correcto     cuerpo vacio, sin errorMessage
+  Signup duplicado    { "errorMessage": "This user already exist." }
+                      (la API omite la "s" de "exists"; el test usa ese texto)
+  Login correcto      texto, no JSON:  Auth_token: <valor>
+  Password malo       { "errorMessage": "Wrong password." }
+  Usuario inexistente { "errorMessage": "User does not exist." }
+
+No se probaron GET, PUT ni DELETE: la pagina solo llama POST para estas
+dos operaciones, y el enunciado pide esos dos servicios.
 ================================================================================

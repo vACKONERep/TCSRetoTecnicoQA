@@ -1,0 +1,20 @@
+[
+  {
+    "caseId": "LG-01",
+    "description": "Login with correct username and password",
+    "flow": "valid",
+    "expectedKey": "NONE"
+  },
+  {
+    "caseId": "LG-02",
+    "description": "Login with an incorrect password",
+    "flow": "wrong_password",
+    "expectedKey": "wrongPassword"
+  },
+  {
+    "caseId": "LG-03",
+    "description": "Login with a username that does not exist",
+    "flow": "unknown_user",
+    "expectedKey": "userDoesNotExist"
+  }
+]

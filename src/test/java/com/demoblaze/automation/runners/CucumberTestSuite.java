@@ -23,7 +23,13 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.demoblaze.automation.steps")
 @ConfigurationParameter(
         key = PLUGIN_PROPERTY_NAME,
-        value = "net.serenitybdd.cucumber.core.plugin.SerenityReporterParallel,pretty,timeline:target/cucumber-timeline"
+        value = "net.serenitybdd.cucumber.core.plugin.SerenityReporterParallel,"
+                + "pretty,"
+                + "summary,"
+                + "html:target/cucumber-reports/index.html,"
+                + "json:target/cucumber-reports/cucumber.json,"
+                + "junit:target/cucumber-reports/cucumber.xml,"
+                + "timeline:target/cucumber-timeline"
 )
 public class CucumberTestSuite {
     // Entry point only — configuration is annotation-driven

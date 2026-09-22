@@ -1,61 +1,87 @@
 ================================================================================
-CONCLUSIONS — DemoBlaze API Automation (Karate)
+CONCLUSIONES — Ejercicio 2, APIs Signup y Login de DemoBlaze
+Karate 1.5.1
 ================================================================================
 
-What was tested
-I automated the Signup and Login APIs of DemoBlaze with four scenarios:
-- Create a new user successfully
-- Try to create a user that already exists
-- Login with correct credentials
-- Login with wrong credentials
+Que probe
+Los dos servicios que pide el enunciado, ambos con POST y JSON:
 
-Technical decisions
-I chose Karate because it is simple and powerful for API testing. 
-I used version 1.5.1 so it works with Java 17. 
-Usernames are generated dynamically to avoid conflicts when running the tests multiple times.
+  POST https://api.demoblaze.com/signup
+  POST https://api.demoblaze.com/login
 
-Challenges
-The API always returns status 200, even when there is an error. 
-Because of this, I had to validate the response body instead of the status code. 
-I also had to capture the exact error messages that DemoBlaze returns.
+Casos, todos dentro de Scenario Outline (no hay un escenario copiado por caso):
 
-Possible improvements
-- Add more endpoints (cart, products, etc.)
-- Run the tests in a CI pipeline
-- Add response time validations
+  SU-01  Crear un usuario nuevo                         signup-cases.csv
+  SU-02  Volver a crear ese mismo usuario               signup-cases.csv
+  LG-01  Login con usuario y password correctos         login-cases.json
+  LG-02  Login con password incorrecto                  login-cases.json
+  LG-03  Login con un usuario que no existe             login-cases.json
 
-Final thoughts
-The project covers everything requested in a clean and maintainable way. 
-It is easy to run and easy to understand.
+LG-03 no lo pedia el enunciado al pie de la letra (pide "usuario y password
+incorrecto"). Lo deje porque un password malo y un usuario que no existe
+devuelven mensajes distintos, y los dos son un login incorrecto. El de
+password malo ya cubre el caso pedido.
 
+De donde salen los datos
+- La forma de cada caso esta en CSV (signup) y JSON (login).
+- Los textos esperados no se repiten en esos archivos. La columna expectedKey
+  apunta a la variable messages de karate-config.js.
+- baseUrl y defaultPassword tambien salen de karate-config.js.
+- El username se genera en cada ejemplo (timestamp + random). La API no tiene
+  un servicio para borrar usuarios, asi que un nombre fijo fallaria en la
+  segunda corrida.
 
-Versión en español
-------------------
+Resultado de la ejecucion (21 de septiembre de 2026)
+Comando, desde la raiz: .\mvnw.cmd -f karate-api\pom.xml clean test
+JDK 17. Karate 1.5.1.
 
-Qué se probó
-Se automatizaron las APIs de Signup y Login de DemoBlaze con cuatro escenarios:
-- Crear un usuario nuevo correctamente
-- Intentar crear un usuario que ya existe
-- Login con credenciales correctas
-- Login con credenciales incorrectas
+  Signup: 2 escenarios, 0 fallos.
+  Login:  3 escenarios, 0 fallos.
+  scenariosfailed: 0.
+  Reporte: target/karate-reports/karate-summary.html
+  Ahi queda, por escenario, el request (entrada) y el response (salida).
 
-Decisiones técnicas
-Elegí Karate porque es simple y muy bueno para pruebas de API. 
-Usé la versión 1.5.1 para que funcione con Java 17. 
-Los nombres de usuario se generan de forma dinámica para evitar conflictos al ejecutar las pruebas varias veces.
+Que observe de la API
+1. Signup y Login responden HTTP 200 tambien cuando el negocio falla.
+   Mirar solo el status no distingue exito de error. El test afirma 200
+   y, encima, el cuerpo.
+2. Los mensajes reales, que deje en messages, son estos:
+     usuario repetido     "This user already exist."
+     password malo        "Wrong password."
+     usuario inexistente  "User does not exist."
+   El primero esta mal escrito (falta la "s" de "exists"). El test usa el
+   texto que devuelve la API, no el que seria correcto en ingles. Si algun
+   dia lo corrigen, se cambia una linea de karate-config.js.
+3. El signup correcto no devuelve un usuario ni un id. El cuerpo viene vacio,
+   sin errorMessage. Eso es lo que tomo como alta exitosa.
+4. El login correcto no devuelve JSON. Devuelve un texto:
+     Auth_token: <valor>
+   El login fallido si devuelve JSON con errorMessage. El outline tiene que
+   bifurcar: token si el caso es valid, errorMessage en los otros dos.
+5. Esos dos recursos, en el uso real de la pagina, solo se llaman con POST.
+   No sume GET, PUT ni DELETE: no forman parte del flujo de registro y el
+   enunciado no los pide. Probar un metodo que el sitio no usa solo habria
+   agregado un caso rojo o ambiguo.
+6. Karate 1.5.1 es la linea que corre en JDK 17. Karate 2 pide JDK 21.
+   Me quede en 1.5.1 para no subir el requisito del readme.
 
-Desafíos
-La API siempre responde con status 200, incluso cuando hay error. 
-Por eso tuve que validar el cuerpo de la respuesta en lugar del código de estado. 
-También tuve que capturar los mensajes de error exactos que devuelve DemoBlaze.
+Riesgos
+- La API es publica y no aisla datos. Dos corridas al mismo tiempo con el
+  mismo username podrian pisarse. El stamp por ejemplo lo hace muy poco
+  probable, no imposible.
+- No hay ambiente aparte de produccion del demo. No existe un karate.env
+  con otra URL porque el sitio no publica una.
 
-Posibles mejoras
-- Agregar más endpoints (carrito, productos, etc.)
-- Ejecutar las pruebas en un pipeline de CI
-- Agregar validaciones de tiempo de respuesta
+Que mejoraria
+- Medir el tiempo de respuesta. Hoy no hay un umbral; el demo a veces tarda
+  y un limite inventado fallaria sin decir nada del contrato.
+- Si mas adelante hubiera un endpoint de carrito, encadenar el Auth_token
+  que ya captura el login.
 
-Conclusión final
-El proyecto cubre todo lo solicitado de forma limpia y mantenible. 
-Es fácil de ejecutar y de entender.
-
+Criterios del correo, en una linea
+1. Corren los casos de signup y de login, que son los metodos POST de esos
+   dos servicios. 5/5 en la corrida del 21 de septiembre de 2026.
+2. Informe karate-reports generado.
+3. Features con variables (baseUrl, password, messages, username generado).
+4. Scenario Outline: signup-cases.csv y login-cases.json.
 ================================================================================

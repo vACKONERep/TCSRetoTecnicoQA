@@ -1,0 +1,54 @@
+{
+  "tool": "k6",
+  "url": "https://fakestoreapi.com/auth/login",
+  "method": "POST",
+  "usersFile": "data/users.csv",
+  "userCount": 5,
+  "targetTps": 20,
+  "maxResponseMs": 1500,
+  "maxErrorRate": 0.03,
+  "scenarioSeconds": 120,
+  "wallClockMs": 120435.0777,
+  "requests": 2400,
+  "arrivalTps": 20,
+  "wallClockTps": 19.927749006633473,
+  "droppedIterations": 0,
+  "errorRate": 0,
+  "responseMs": {
+    "avg": 422.7198009166669,
+    "min": 300.6512,
+    "med": 464.4276,
+    "p90": 523.7670899999999,
+    "p95": 554.1742049999999,
+    "p99": 668.2528929999997,
+    "max": 1188.2192
+  },
+  "checks": [
+    {
+      "name": "status is 201",
+      "passes": 2400,
+      "fails": 0
+    },
+    {
+      "name": "token is present",
+      "passes": 2400,
+      "fails": 0
+    },
+    {
+      "name": "response time <= 1.5s",
+      "passes": 2400,
+      "fails": 0
+    }
+  ],
+  "criteria": {
+    "reached20Tps": true,
+    "p95Under1_5s": true,
+    "maxUnder1_5s": true,
+    "errorRateUnder3Percent": true,
+    "thresholds": {
+      "http_req_failed": true,
+      "http_req_duration": true,
+      "login_duration": true
+    }
+  }
+}

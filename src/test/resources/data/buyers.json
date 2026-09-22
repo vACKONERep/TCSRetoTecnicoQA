@@ -1,0 +1,20 @@
+[
+  {
+    "buyerId": "buyer-01",
+    "name": "Juan Perez",
+    "country": "Ecuador",
+    "city": "Quito",
+    "creditCard": "4111111111111111",
+    "month": "12",
+    "year": "2028"
+  },
+  {
+    "buyerId": "buyer-02",
+    "name": "Maria Lopez",
+    "country": "Ecuador",
+    "city": "Guayaquil",
+    "creditCard": "5500000000000004",
+    "month": "06",
+    "year": "2029"
+  }
+]
